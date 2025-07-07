@@ -1,3 +1,18 @@
+# Licensed under the Apache License, Version 2.0 (the "License");.
+
+# For each question in the dataset, generate several reasoning traces
+
+# example usage here:
+# python generate.py \
+#     --hf-dataset "medical_mcqa" \
+#     --prompt-column "prompt" \
+#     --prompt-template "{{ instruction }}" \
+#     --model "deepseek-r1" \
+#     --vllm-server-url "http://localhost:8000/v1" \
+#     --num-generations 4 \
+#     --max-new-tokens 2048 \
+#     --hf-output-dataset "my-org/mcqa-responses"
+
 from typing import Optional
 
 from distilabel.llms import OpenAILLM
