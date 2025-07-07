@@ -1,0 +1,49 @@
+# Model arguments - use small model for local testing
+model_name_or_path: microsoft/DialoGPT-small
+torch_dtype: float32
+attn_implementation: eager
+
+system_prompt: "You are a medical expert that provides well-reasoned and detailed responses. You first think about the reasoning process as an internal monologue and then provide the user with the answer. Respond in the following format: <think>\n...\n</think>\n<answer>\n...\n</answer>"
+
+# Dataset Configuration
+dataset_name: openlifescienceai/medmcqa
+dataset_prompt_column: problem
+
+# MINIMAL training settings for local testing
+bf16: false
+learning_rate: 1.0e-04
+num_train_epochs: 1
+max_steps: 3  # Just 3 steps for quick validation
+do_eval: false
+gradient_accumulation_steps: 2
+per_device_train_batch_size: 1
+gradient_checkpointing: false
+
+# Generation parameters - minimal
+max_prompt_length: 128
+max_completion_length: 256
+num_generations: 2
+temperature: 0.7
+use_vllm: false
+use_liger_kernel: false
+
+# Reward functions
+reward_funcs:
+- multiple_choice
+- format
+
+# Required reward attributes
+cosine_min_value_wrong: 0.0
+cosine_max_value_wrong: 1.0
+cosine_min_value_correct: 0.0
+cosine_max_value_correct: 1.0
+cosine_max_len: 512
+
+# Output
+output_dir: test_output_local
+overwrite_output_dir: true
+save_strategy: "no"
+logging_steps: 1
+seed: 42
+push_to_hub: false
+report_to: []

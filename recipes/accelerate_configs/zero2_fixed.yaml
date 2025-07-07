@@ -1,0 +1,38 @@
+compute_environment: LOCAL_MACHINE
+debug: false
+deepspeed_config:
+  bf16:
+    enabled: true
+  gradient_clipping: 1.0
+  # Batch size parameters - MUST MATCH config1.yaml
+  gradient_accumulation_steps: 3 
+  train_batch_size: 72 
+  train_micro_batch_size_per_gpu: 12
+
+  offload_optimizer_device: none
+  offload_param_device: none
+  zero3_init_flag: false
+  zero3_save_16bit_model: false
+  zero_stage: 2
+  allgather_bucket_size: 200000000
+  reduce_bucket_size: 200000000
+  overlap_comm: true
+  contiguous_gradients: true
+  sub_group_size: 1000000000000
+  reduce_scatter: true
+  allgather_partitions: true
+  use_multi_rank_bucket_allreduce: true
+distributed_type: DEEPSPEED
+downcast_bf16: false
+enable_cpu_affinity: false
+machine_rank: 0
+main_training_function: main
+mixed_precision: bf16
+num_machines: 1
+num_processes: 2
+rdzv_backend: static
+same_network: true
+tpu_env: []
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false
