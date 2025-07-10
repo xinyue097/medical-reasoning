@@ -12,9 +12,8 @@ deepspeed_config:
     cpu_offload: false
   bf16:
     enabled: true
-  gradient_accumulation_steps: 3
-  train_batch_size: 72
-  train_micro_batch_size_per_gpu: 12
+  gradient_accumulation_steps: 2
+  train_micro_batch_size_per_gpu: 20
   gradient_clipping: 1.0
   steps_per_print: 2000
   wall_clock_breakdown: false
