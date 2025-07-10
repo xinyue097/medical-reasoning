@@ -17,7 +17,7 @@ dataset_name: "openlifescienceai/medmcqa"
 dataset_prompt_column: "question"
 dataset_train_split: "train" 
 dataset_test_split: "validation"
-max_steps: 1000
+max_steps: 1200
 
 # Training Configuration
 output_dir: "./outputs/medreason"
@@ -26,13 +26,13 @@ seed: 42
 bf16: true
 learning_rate: 3.5e-5
 num_train_epochs: 1
-gradient_checkpointing: false
+gradient_checkpointing: true
 
-# Torch Compile
-torch_compile: true
-torch_compile_mode: "reduce-overhead"
+# Torch Compile - DISABLED due to cuda memory issues
+torch_compile: false
+# torch_compile_mode: "reduce-overhead"
 
-# 2 GPU Optimized Batch Configuration
+# Batch Configuration
 per_device_train_batch_size: 12
 per_device_eval_batch_size: 6
 gradient_accumulation_steps: 3
