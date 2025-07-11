@@ -25,62 +25,50 @@ def format_reward(completions, **kwargs):
     return [1.0 if match else 0.0 for match in matches]
 
 
-# def format_reward(completions, **kwargs):
+# def format_reward_partial_credit(completions, **kwargs):
 #     """
-#     Reward function that checks if responses follow the required format:
-#     <think>...</think>
-#     <answer>...</answer>
-    
-#     Input: completions - List of lists, where each inner list contains dicts with "content" key
-#     Output: List of float scores (0.0 to 1.0)
-#     """
-#     # Extract content from the nested structure: [[{"content": "text"}], [{"content": "text"}], ...]
-#     completion_contents = [completion[0]["content"] for completion in completions]
-    
-#     scores = []
-#     for content in completion_contents:
-#         content = content.strip()
-        
-#         # Check for proper think tags (both opening and closing)
-#         has_think_open = "<think>" in content.lower()
-#         has_think_close = "</think>" in content.lower()
-        
-#         # Check for proper answer tags (both opening and closing)
-#         has_answer_open = "<answer>" in content.lower()
-#         has_answer_close = "</answer>" in content.lower()
-        
-#         # # Debug logging
-#         # print(f"DEBUG FORMAT REWARD:")
-#         # print(f"  Content preview: {content[:100]}...")
-#         # print(f"  Has <think>: {has_think_open}")
-#         # print(f"  Has </think>: {has_think_close}")
-#         # print(f"  Has <answer>: {has_answer_open}")
-#         # print(f"  Has </answer>: {has_answer_close}")
-        
-#         # Calculate score based on format compliance
-#         score = 0.0
-        
-#         # Reward for complete think section (both tags)
-#         if has_think_open and has_think_close:
-#             score += 0.5
-#         elif has_think_open or has_think_close:  # Partial credit
-#             score += 0.2
-        
-#         # Reward for complete answer section (both tags)
-#         if has_answer_open and has_answer_close:
-#             score += 0.5
-#         elif has_answer_open or has_answer_close:  # Partial credit
-#             score += 0.2
-        
-#         # Bonus for having both sections complete
-#         if (has_think_open and has_think_close and has_answer_open and has_answer_close):
-#             score = 1.0  # Perfect format gets full score
-        
-#         print(f"  Format Score: {score}")
-#         scores.append(score)
-    
-#     return scores
+#     Rewards the model for correctly formatting its response by providing partial
+#     credit for getting the structure and order of tags correct.
 
+#     The scoring guides the model toward the ideal format: <think>...</think><answer>...</answer>
+
+#     - +0.2 for an opening `<think>` tag.
+#     - +0.3 for a closing `</think>` tag that appears *after* the opening one.
+#     - +0.2 for an `<answer>` tag that appears *after* the complete think block.
+#     - +0.3 for a closing `</answer>` tag that appears *after* its opening tag.
+#     """
+#     scores = []
+#     for completion in completions:
+#         # Extract the string content from the completion
+#         content = completion[0]["content"].strip()
+#         score = 0.0
+
+#         # Find the indices of all required tags
+#         think_start_idx = content.find("<think>")
+#         think_end_idx = content.find("</think>")
+#         answer_start_idx = content.find("<answer>")
+#         answer_end_idx = content.find("</answer>")
+
+#         # 1. Reward for finding the opening <think> tag anywhere in the string.
+#         if think_start_idx != -1:
+#             score += 0.2
+
+#             # 2. Reward for a complete <think>...</think> block with correct order.
+#             if think_end_idx > think_start_idx:
+#                 score += 0.3
+
+#                 # 3. Reward for an <answer> tag that appears after the think block.
+#                 # This enforces the correct sequence.
+#                 if answer_start_idx > think_end_idx:
+#                     score += 0.2
+
+#                     # 4. Reward for a complete <answer>...</answer> block with correct order.
+#                     if answer_end_idx > answer_start_idx:
+#                         score += 0.3
+        
+#         scores.append(score)
+
+#     return scores
 
 def tag_count_reward(completions, **kwargs) -> list[float]:
     """Reward function that checks if we produce the desired number of think and answer tags associated with `format_reward()`.
@@ -231,100 +219,6 @@ def get_soft_overlong_punishment(max_completion_len, soft_punish_cache):
 
 #-------------- Multiple Choices specific reward function ----------------
 
-# def multiple_choice_reward(completions: list[list[dict[str, str]]], **kwargs) -> list[Optional[float]]:
-#     """Reward function that checks if the completion contains the correct multiple choice answer.
-    
-#     This function extracts the answer from the completion and compares it with the ground truth.
-#     The ground truth uses 0-based indexing where 0=A, 1=B, 2=C, 3=D.
-#     Only accepts letter answers (A, B, C, D) from model completions.
-#     """
-#     # Extract solution from kwargs - GRPO trainer passes it here
-#     solution = kwargs.get('solution', kwargs.get('labels', kwargs.get('cop', [])))
-    
-#     if not solution:
-#         print("WARNING: No solution found in kwargs")
-#         return [0.0] * len(completions)
-    
-#     contents = [completion[0]["content"] for completion in completions]
-#     rewards = []
-    
-#     for content, sol in zip(contents, solution):
-#         # Convert sol to int if it's a string, handle int64 dtype
-#         try:
-#             if isinstance(sol, str):
-#                 sol_int = int(sol)
-#             else:
-#                 sol_int = int(sol)  # Handle int64 from pandas
-            
-#             # Check if the ground truth solution is valid (0, 1, 2, 3)
-#             if sol_int in [0, 1, 2, 3]:
-#                 # Extract answer from completion - ONLY look for letters A, B, C, D
-#                 extracted_answer = None
-                
-#                 # First try to extract from \\boxed{} format - only letters
-#                 boxed_pattern = r'\\boxed\{([A-D])\}'
-#                 boxed_match = re.search(boxed_pattern, content, re.IGNORECASE)
-#                 if boxed_match:
-#                     extracted_answer = boxed_match.group(1).upper().strip()
-#                 else:
-#                     # Try to extract from <answer> tags - only letters
-#                     answer_tag_pattern = r'<answer>\s*([A-D])\s*</answer>'
-#                     answer_match = re.search(answer_tag_pattern, content, re.IGNORECASE)
-                    
-#                     if answer_match:
-#                         extracted_answer = answer_match.group(1).upper().strip()
-#                     else:
-#                         # Try to find patterns like "The answer is X" or "Option X" - only letters
-#                         answer_patterns = [
-#                             r'(?:the answer is|answer is|answer:|option is|choice is)\s*([A-D])',
-#                             r'(?:the answer is|answer is|answer:|option is|choice is)\s*option\s*([A-D])',
-#                             r'\b([A-D])\s*(?:is the|is correct|is the answer)',
-#                             r'(?:^|\n)\s*([A-D])\s*[.)]?\s*$'
-#                         ]
-                        
-#                         for pattern in answer_patterns:
-#                             match = re.search(pattern, content, re.IGNORECASE | re.MULTILINE)
-#                             if match:
-#                                 extracted_answer = match.group(1).upper().strip()
-#                                 break
-                        
-#                         if not extracted_answer:
-#                             # Last resort: look for isolated letters near the end
-#                             final_pattern = r'\b([A-D])\b(?!.*\b[A-D]\b)'
-#                             final_match = re.search(final_pattern, content, re.IGNORECASE)
-#                             if final_match:
-#                                 extracted_answer = final_match.group(1).upper().strip()
-                
-#                 # Compute binary rewards if answer is extractable, `None` otherwise to skip this example
-#                 try:
-#                     if extracted_answer and extracted_answer in ['A', 'B', 'C', 'D']:
-#                         # Convert ground truth int to letter for comparison
-#                         # 0 = A, 1 = B, 2 = C, 3 = D (0-based indexing)
-#                         number_to_letter = {0: 'A', 1: 'B', 2: 'C', 3: 'D'}
-                        
-#                         # Compare extracted letter with converted ground truth
-#                         if extracted_answer == number_to_letter[sol_int]:
-#                             reward = 1.0
-#                         else:
-#                             reward = 0.0
-#                     else:
-#                         reward = 0.0
-#                 except Exception as e:
-#                     print(f"Multiple choice evaluation failed: {e}, answer: {extracted_answer}, solution: {sol_int}")
-#                     reward = None
-#             else:
-#                 # If the ground truth solution is not valid, we assign `None` to skip this example
-#                 reward = None
-#                 print("Invalid ground truth solution: ", sol_int)
-#         except (ValueError, TypeError) as e:
-#             # If conversion to int fails, skip this example
-#             reward = None
-#             print(f"Failed to convert solution to int: {e}, solution: {sol}")
-        
-#         rewards.append(reward)
-    
-#     return rewards
-
 
 def multiple_choice_reward(completions: list[list[dict[str, str]]], **kwargs) -> list[Optional[float]]:
     """Reward function that checks if the completion contains the correct multiple choice answer."""
@@ -334,55 +228,30 @@ def multiple_choice_reward(completions: list[list[dict[str, str]]], **kwargs) ->
     
     if not solution:
         print("WARNING: No solution found in kwargs")
-        print(f"Available kwargs keys: {list(kwargs.keys())}")
         return [0.0] * len(completions)
-    
-    # # ✅ ADDED: Debug the solution data
-    # print(f"DEBUG: Received solution data: {solution[:5]}...")  # First 5 items
-    # print(f"DEBUG: Solution data types: {[type(x) for x in solution[:3]]}")
     
     contents = [completion[0]["content"] for completion in completions]
     rewards = []
     
-    for i, (content, sol) in enumerate(zip(contents, solution)):
+    for content, sol in zip(contents, solution):
+        reward = None  # Default to None to skip ambiguous cases
         try:
-            # Handle different data types
-            if hasattr(sol, 'item'):
-                sol_int = int(sol.item())
-            else:
-                sol_int = int(sol)
-            
-            # ✅ ADDED: More detailed logging for invalid cases
+            sol_int = int(sol.item()) if hasattr(sol, 'item') else int(sol)
             if sol_int in [0, 1, 2, 3]:
-                # Extract answer from model response
                 extracted_answer = extract_multiple_choice_answer(content)
-                
-                # Convert ground truth int to letter for comparison
-                number_to_letter = {0: 'A', 1: 'B', 2: 'C', 3: 'D'}
-                
-                # Compare extracted answer with ground truth
-                if extracted_answer == number_to_letter[sol_int]:
-                    reward = 1.0
-                else:
-                    reward = 0.0
-            else:
-                reward = None
-                # print(f"Invalid ground truth solution: {sol_int} (type: {type(sol)}, original: {sol})")
-                # print(f"DEBUG: This is item {i} in the batch")
-                # print(f"DEBUG: kwargs keys available: {list(kwargs.keys())}")
-                # # ✅ ADDED: Check if this is a batch indexing issue
-                # if hasattr(kwargs.get('solution', []), '__len__'):
-                #     print(f"DEBUG: Solution array length: {len(kwargs.get('solution', []))}")
-                
-        except (ValueError, TypeError) as e:
-            reward = None
-            # print(f"Failed to convert solution to int: {e}, solution: {sol} (type: {type(sol)})")
+                if extracted_answer is not None:
+                    number_to_letter = {0: 'A', 1: 'B', 2: 'C', 3: 'D'}
+                    if extracted_answer == number_to_letter[sol_int]:
+                        reward = 1.0  # Correct answer
+                    else:
+                        reward = 0.0  # Incorrect answer
+        except (ValueError, TypeError):
+            pass
         
         rewards.append(reward)
     
     return rewards
 
-# ✅ ADDED: The missing extraction function
 def extract_multiple_choice_answer(content: str) -> str:
     """Extract the multiple choice answer (A, B, C, D) from model response."""
     import re
