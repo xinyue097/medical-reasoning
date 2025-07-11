@@ -3,11 +3,11 @@
 #SBATCH -p gpu
 #SBATCH --output=logs/train_%j.out
 #SBATCH --error=logs/train_%j.err
-#SBATCH --time=1:00:00
-#SBATCH --mem=128G
+#SBATCH --time=10:00:00
+#SBATCH --mem=64G
 #SBATCH --nodes=1 
 #SBATCH --cpus-per-task=32
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:h100:2
 #SBATCH --exclusive
 #SBATCH --mail-type=ALL
 
@@ -15,9 +15,9 @@
 module purge
 module load miniconda
 module load GCC/12.2.0
-module load CUDA/12.4.0
+module load CUDA/12.4
 
-conda activate med_env
+conda activate med1
 
 echo "=== ENVIRONMENT SETUP ==="
 # Set GPU visibility
@@ -64,12 +64,6 @@ else
     exit 1
 fi
 
-# Check accelerate config
-if [ ! -f "accelerate_config.yaml" ]; then
-    echo "❌ accelerate_config.yaml not found in current directory"
-    exit 1
-fi
-
 # W&B Setup
 export WANDB_API_KEY="dcb0e216ebbdf52149865275d6cff550b91f3ca1"
 export WANDB_PROJECT="medreason"
@@ -89,9 +83,9 @@ if [ ! -f "config1.yaml" ]; then
     exit 1
 fi
 
-# Accelerate YAML config exists
-if [ ! -f "recipes/accelerate_configs/zero2.yaml" ]; then
-    echo "❌ Accelerate YAML config not found"
+# Check accelerate config
+if [ ! -f "accelerate_config.yaml" ]; then
+    echo "❌ accelerate_config.yaml not found in current directory"
     exit 1
 fi
 
