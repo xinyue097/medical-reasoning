@@ -21,7 +21,8 @@ max_steps: 1200
 
 # Training Configuration
 output_dir: "./outputs/medreason"
-overwrite_output_dir: true
+overwrite_output_dir: false
+# resume_from_checkpoint: "./outputs/medreason/checkpoint-200"  # Specify exact checkpoint
 seed: 42
 bf16: true
 learning_rate: 1.0e-06
