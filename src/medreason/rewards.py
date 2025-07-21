@@ -25,50 +25,50 @@ def format_reward(completions, **kwargs):
     return [1.0 if match else 0.0 for match in matches]
 
 
-# def format_reward_partial_credit(completions, **kwargs):
-#     """
-#     Rewards the model for correctly formatting its response by providing partial
-#     credit for getting the structure and order of tags correct.
+def format_reward_partial_credit(completions, **kwargs):
+    """
+    Rewards the model for correctly formatting its response by providing partial
+    credit for getting the structure and order of tags correct.
 
-#     The scoring guides the model toward the ideal format: <think>...</think><answer>...</answer>
+    The scoring guides the model toward the ideal format: <think>...</think><answer>...</answer>
 
-#     - +0.2 for an opening `<think>` tag.
-#     - +0.3 for a closing `</think>` tag that appears *after* the opening one.
-#     - +0.2 for an `<answer>` tag that appears *after* the complete think block.
-#     - +0.3 for a closing `</answer>` tag that appears *after* its opening tag.
-#     """
-#     scores = []
-#     for completion in completions:
-#         # Extract the string content from the completion
-#         content = completion[0]["content"].strip()
-#         score = 0.0
+    - +0.2 for an opening `<think>` tag.
+    - +0.3 for a closing `</think>` tag that appears *after* the opening one.
+    - +0.2 for an `<answer>` tag that appears *after* the complete think block.
+    - +0.3 for a closing `</answer>` tag that appears *after* its opening tag.
+    """
+    scores = []
+    for completion in completions:
+        # Extract the string content from the completion
+        content = completion[0]["content"].strip()
+        score = 0.0
 
-#         # Find the indices of all required tags
-#         think_start_idx = content.find("<think>")
-#         think_end_idx = content.find("</think>")
-#         answer_start_idx = content.find("<answer>")
-#         answer_end_idx = content.find("</answer>")
+        # Find the indices of all required tags
+        think_start_idx = content.find("<think>")
+        think_end_idx = content.find("</think>")
+        answer_start_idx = content.find("<answer>")
+        answer_end_idx = content.find("</answer>")
 
-#         # 1. Reward for finding the opening <think> tag anywhere in the string.
-#         if think_start_idx != -1:
-#             score += 0.2
+        # 1. Reward for finding the opening <think> tag anywhere in the string.
+        if think_start_idx != -1:
+            score += 0.2
 
-#             # 2. Reward for a complete <think>...</think> block with correct order.
-#             if think_end_idx > think_start_idx:
-#                 score += 0.3
+            # 2. Reward for a complete <think>...</think> block with correct order.
+            if think_end_idx > think_start_idx:
+                score += 0.3
 
-#                 # 3. Reward for an <answer> tag that appears after the think block.
-#                 # This enforces the correct sequence.
-#                 if answer_start_idx > think_end_idx:
-#                     score += 0.2
+                # 3. Reward for an <answer> tag that appears after the think block.
+                # This enforces the correct sequence.
+                if answer_start_idx > think_end_idx:
+                    score += 0.2
 
-#                     # 4. Reward for a complete <answer>...</answer> block with correct order.
-#                     if answer_end_idx > answer_start_idx:
-#                         score += 0.3
+                    # 4. Reward for a complete <answer>...</answer> block with correct order.
+                    if answer_end_idx > answer_start_idx:
+                        score += 0.3
         
-#         scores.append(score)
+        scores.append(score)
 
-#     return scores
+    return scores
 
 def tag_count_reward(completions, **kwargs) -> list[float]:
     """Reward function that checks if we produce the desired number of think and answer tags associated with `format_reward()`.
@@ -280,43 +280,6 @@ def extract_multiple_choice_answer(content: str) -> str:
     return None
 
 
-def compute_metrics(eval_preds, tokenizer) -> Dict[str, float]:
-    """
-    This function is called by the trainer during evaluation.
-    It wraps the multiple_choice_reward function to compute overall accuracy.
-    """
-    # eval_preds is a tuple containing predictions and label_ids
-    # For GRPOTrainer, predictions are the generated token IDs
-    predictions, label_ids = eval_preds
-
-    # The 'cop' (correct option) column is passed as the label_ids
-    # It's important to ensure this is done in grpo.py
-    solutions = label_ids
-
-    # Decode the generated sequences into text
-    # The -100 labels are for the prompt, we want to decode the full sequence
-    predictions[predictions == -100] = tokenizer.pad_token_id
-    decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
-
-    # The reward function expects a list of lists of dicts
-    # We wrap our decoded predictions to match this format for one generation
-    wrapped_completions = [[{"content": pred}] for pred in decoded_preds]
-
-    # Call your reward function with kwargs
-    rewards = multiple_choice_reward(completions=wrapped_completions, solution=solutions)
-    
-    # Filter out None values (from examples that were skipped) and calculate accuracy
-    valid_rewards = [r for r in rewards if r is not None]
-    if len(valid_rewards) == 0:
-        return {"eval_accuracy": 0.0, "eval_samples": 0}
-
-    accuracy = np.mean(valid_rewards)
-    
-    return {
-        "eval_accuracy": accuracy,
-        "eval_samples": len(valid_rewards) # Report how many examples were successfully evaluated
-    }    
-
 #-------------------- Math specific reward function ----------------------
 def accuracy_reward(completions: list[list[dict[str, str]]], solution: list[str], **kwargs) -> list[Optional[float]]:
     """Reward function that checks if the completion is the same as the ground truth."""
@@ -523,6 +486,7 @@ def get_reward_funcs(script_args) -> list[Callable]:
         "accuracy": accuracy_reward,
         "multiple_choice": multiple_choice_reward,
         "format": format_reward,
+        "format_partial_credit": format_reward_partial_credit,
         "reasoning_steps": reasoning_steps_reward,
         "cosine": get_cosine_scaled_reward(
             min_value_wrong=script_args.cosine_min_value_wrong,

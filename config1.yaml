@@ -17,7 +17,7 @@ dataset_name: "openlifescienceai/medmcqa"
 dataset_prompt_column: "question"
 dataset_train_split: "train" 
 dataset_test_split: "validation"
-max_steps: 1200
+max_steps: -1
 
 # Training Configuration
 output_dir: "./outputs/medreason"
@@ -63,12 +63,14 @@ reward_funcs:
   - "reasoning_steps"
   - "repetition_penalty"
   - "format"
+  - "format_partial_credit"
 
-reward_weights:
+reward_weights: # 3 points in total
   - 1.0
-  - 1.5
   - 0.5
-  - 0.2
+  - 0.5
+  - 0.4
+  - 0.1
   - 0.5
 
 # Logging
@@ -86,14 +88,16 @@ weight_decay: 0.01
 # System prompt - FIXED FORMATTING
 system_prompt: |
   You are a helpful AI assistant that provides well-reasoned and detailed medical responses. 
-  You first think about the reasoning process as an internal monologue and then provide the user with the answer. 
+  
+  **IMPORTANT:** You MUST ALWAYS begin your response with an internal monologue within `<think>` tags, and then provide your final answer within `<answer>` tags.
+  
   You MUST respond in this EXACT format with newlines as shown:
   
   <think>
-  Your detailed reasoning here
+  [Your detailed reasoning here]
   </think>
   <answer>
-  A
+  [Your single letter answer here]
   </answer>
   
   Example:
@@ -104,7 +108,7 @@ system_prompt: |
   A
   </answer>
   
-  CRITICAL: Start with <think> followed by newline, end with newline before </think>, then newline, then <answer> followed by newline, then your single letter answer, then newline before </answer>.
+  CRITICAL: **Start your entire response with `<think>` followed by a newline.** Ensure there's a newline before `</think>`, then a newline, then `<answer>` followed by a newline, then your single letter answer, and finally a newline before `</answer>`.
 
 
 # # Chat template 
