@@ -47,23 +47,6 @@ export OMP_NUM_THREADS=16
 export TRITON_CACHE_DIR="/tmp/triton_cache_$$"
 mkdir -p "$TRITON_CACHE_DIR"
 
-# GPU cleanup
-if [ -f "gpu_cleanup.sh" ]; then
-    chmod +x gpu_cleanup.sh
-    ./gpu_cleanup.sh
-else
-    echo "⚠️ gpu_cleanup.sh not found, skipping cleanup"
-fi
-
-# GPU testing
-if [ -f "gpu_test.sh" ]; then
-    chmod +x gpu_test.sh
-    ./gpu_test.sh
-else
-    echo "❌ gpu_test.sh not found"
-    exit 1
-fi
-
 # W&B Setup
 export WANDB_API_KEY="dcb0e216ebbdf52149865275d6cff550b91f3ca1"
 export WANDB_PROJECT="medreason"

@@ -27,8 +27,7 @@ def format_reward(completions, **kwargs):
 
 def format_reward_partial_credit(completions, **kwargs):
     """
-    Rewards the model for correctly formatting its response by providing partial
-    credit for getting the structure and order of tags correct.
+    Partial credit for the presence and correct relative order of the tags.
 
     The scoring guides the model toward the ideal format: <think>...</think><answer>...</answer>
 
