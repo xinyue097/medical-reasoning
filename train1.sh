@@ -8,7 +8,6 @@
 #SBATCH --nodes=1 
 #SBATCH --cpus-per-task=32
 #SBATCH --gres=gpu:h100:2
-#SBATCH --exclusive
 #SBATCH --mail-type=ALL
 
 # Load modules
@@ -21,7 +20,6 @@ conda activate med1
 
 echo "=== ENVIRONMENT SETUP ==="
 # Set GPU visibility
-export CUDA_VISIBLE_DEVICES=0,1
 export TOKENIZERS_PARALLELISM=false
 
 # PyTorch optimizations
