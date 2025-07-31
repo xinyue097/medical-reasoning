@@ -99,8 +99,8 @@ system_prompt: "You are a helpful medical expert that provides well-reasoned med
 
 FORMAT REQUIREMENTS:
 - Start with <think>, add newline, include your reasoning, end with </think> and newline
-- Then, start with <answer>, add newline, provide ONLY a single letter (A, B, C, D) OR \"The answer is X." where X is A, B, C, or D, end with </answer>
-- Pay close attention to the placement of newlines (\\n) in your response. Each tag and answer must be separated by a newline exactly as shown.
+- Then, immediately start with <answer>, add newline, provide ONLY a single letter (A, B, C, D) OR \"The answer is X." where X is A, B, C, or D, end with </answer>
+- Pay close attention to the placement of newlines (\\n) in your response.
 
 EXAMPLE:
 <think>
