@@ -260,17 +260,22 @@ def extract_multiple_choice_answer(content: str) -> str:
     if answer_match:
         return answer_match.group(1).upper()
     
-    # Method 2: Look for "The answer is X" patterns
+    # Method 2: Look for answer in <answer> tags with "the answer is" phrase
+    answer_match = re.search(r'<answer>\s*(?:the answer is|answer is)\s*([ABCD])(?:\s*\.|$)\s*</answer>', content, re.IGNORECASE)
+    if answer_match:
+        return answer_match.group(1).upper()
+    
+    # Method 3: Look for "The answer is X" patterns in the whole response
     answer_match = re.search(r'(?:answer is|answer:|is)\s*([ABCD])', content, re.IGNORECASE)
     if answer_match:
         return answer_match.group(1).upper()
-    
-    # Method 3: Look for standalone letters at end of response
+
+    # Method 4: Look for standalone letters at end of response
     answer_match = re.search(r'\b([ABCD])\b(?!.*\b[ABCD]\b)', content, re.IGNORECASE)
     if answer_match:
         return answer_match.group(1).upper()
-    
-    # Method 4: Look for any A, B, C, D in the response (last resort)
+
+    # Method 5: Look for any A, B, C, D in the response (last resort)
     letters = re.findall(r'\b([ABCD])\b', content, re.IGNORECASE)
     if letters:
         return letters[-1].upper()  # Return the last found letter
