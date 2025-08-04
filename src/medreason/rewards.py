@@ -275,7 +275,7 @@ def extract_multiple_choice_answer(content: str) -> str:
     if answer_match:
         return answer_match.group(1).upper()
 
-    # Method 5: Look for any A, B, C, D in the response (last resort)
+    # Method 5: Look for any A, B, C, D in the response
     letters = re.findall(r'\b([ABCD])\b', content, re.IGNORECASE)
     if letters:
         return letters[-1].upper()  # Return the last found letter
