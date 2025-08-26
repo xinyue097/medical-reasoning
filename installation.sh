@@ -6,23 +6,35 @@ module load GCC/12.2.0
 module load CUDA/12.4
 
 conda config --set solver libmamba
-conda create --name med1 python=3.11
+conda create --name medenv python=3.11
+
+# conda install -c conda-forge -y \
+#     "pandas>=2.2.3" \
+#     "packaging>=23.0" \
+#     "pytest" \
+#     "einops>=0.8.0" \
+#     "datasets>=3.2.0" \
+#     "safetensors>=0.3.3" \
+#     "sentencepiece>=0.1.99" \
+#     "wandb>=0.19.1" \
+#     "langdetect" \
+#     "async-lru>=2.0.5"
 
 conda install -c conda-forge -y \
-    pandas>=2.2.3 \
-    packaging>=23.0 \
-    pytest \
-    einops>=0.8.0 \
-    datasets>=3.2.0 \
-    safetensors>=0.3.3 \
-    sentencepiece>=0.1.99 \
-    wandb>=0.19.1 \
-    isort>=5.12.0 \
-    flake8>=6.0.0 \
-    parameterized>=0.9.0 \
-    jieba \
-    langdetect \
-    async-lru>=2.0.5
+    "pandas>=2.2.3" \
+    "packaging>=23.0" \
+    "pytest" \
+    "einops>=0.8.0" \
+    "datasets>=3.2.0" \
+    "safetensors>=0.3.3" \
+    "sentencepiece>=0.1.99" \
+    "wandb>=0.19.1" \
+    "isort>=5.12.0" \
+    "flake8>=6.0.0" \
+    "parameterized>=0.9.0" \
+    "jieba" \
+    "langdetect" \
+    "async-lru>=2.0.5"
 
 
 conda install -y pytorch==2.6.0 torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia

@@ -27,46 +27,56 @@ def format_reward(completions, **kwargs):
 
 def format_reward_partial_credit(completions, **kwargs):
     """
-    Partial credit for the presence and correct relative order of the tags.
-
-    The scoring guides the model toward the ideal format: <think>...</think><answer>...</answer>
-
-    - +0.2 for an opening `<think>` tag.
-    - +0.3 for a closing `</think>` tag that appears *after* the opening one.
-    - +0.2 for an `<answer>` tag that appears *after* the complete think block.
-    - +0.3 for a closing `</answer>` tag that appears *after* its opening tag.
+    Combined reward function that gives full credit (1.0) for perfect format,
+    otherwise gives partial credit based on tag presence and correct ordering.
+    
+    Perfect format: <think>\n...\n</think>\n<answer>\n...\n</answer>
+    
+    Partial credit breakdown:
+    - +0.15 for an opening `<think>` tag
+    - +0.25 for a closing `</think>` tag that appears after the opening one
+    - +0.15 for an `<answer>` tag that appears after the complete think block
+    - +0.25 for a closing `</answer>` tag that appears after its opening tag
     """
+    # First check for perfect format
+    perfect_pattern = r"^<think>\n.*?\n</think>\n<answer>\n.*?\n</answer>$"
+    completion_contents = [completion[0]["content"] for completion in completions]
+    perfect_matches = [re.match(perfect_pattern, content, re.DOTALL | re.MULTILINE) for content in completion_contents]
+    
     scores = []
-    for completion in completions:
-        # Extract the string content from the completion
-        content = completion[0]["content"].strip()
-        score = 0.0
+    for i, (completion, perfect_match) in enumerate(zip(completions, perfect_matches)):
+        if perfect_match:
+            # Perfect format gets full credit
+            scores.append(1.0)
+        else:
+            # Calculate partial credit
+            content = completion[0]["content"].strip()
+            score = 0.0
 
-        # Find the indices of all required tags
-        think_start_idx = content.find("<think>")
-        think_end_idx = content.find("</think>")
-        answer_start_idx = content.find("<answer>")
-        answer_end_idx = content.find("</answer>")
+            # Find the indices of all required tags
+            think_start_idx = content.find("<think>")
+            think_end_idx = content.find("</think>")
+            answer_start_idx = content.find("<answer>")
+            answer_end_idx = content.find("</answer>")
 
-        # 1. Reward for finding the opening <think> tag anywhere in the string.
-        if think_start_idx != -1:
-            score += 0.2
+            # 1. Reward for finding the opening <think> tag anywhere in the string
+            if think_start_idx != -1:
+                score += 0.15
 
-            # 2. Reward for a complete <think>...</think> block with correct order.
-            if think_end_idx > think_start_idx:
-                score += 0.3
+                # 2. Reward for a complete <think>...</think> block with correct order
+                if think_end_idx > think_start_idx:
+                    score += 0.25
 
-                # 3. Reward for an <answer> tag that appears after the think block.
-                # This enforces the correct sequence.
-                if answer_start_idx > think_end_idx:
-                    score += 0.2
+                    # 3. Reward for an <answer> tag that appears after the think block
+                    if answer_start_idx > think_end_idx:
+                        score += 0.15
 
-                    # 4. Reward for a complete <answer>...</answer> block with correct order.
-                    if answer_end_idx > answer_start_idx:
-                        score += 0.3
-        
-        scores.append(score)
-
+                        # 4. Reward for a complete <answer>...</answer> block with correct order
+                        if answer_end_idx > answer_start_idx:
+                            score += 0.25
+            
+            scores.append(score)
+    
     return scores
 
 def tag_count_reward(completions, **kwargs) -> list[float]:
@@ -275,7 +285,7 @@ def extract_multiple_choice_answer(content: str) -> str:
     if answer_match:
         return answer_match.group(1).upper()
 
-    # Method 5: Look for any A, B, C, D in the response (last resort)
+    # Method 5: Look for any A, B, C, D in the response
     letters = re.findall(r'\b([ABCD])\b', content, re.IGNORECASE)
     if letters:
         return letters[-1].upper()  # Return the last found letter
