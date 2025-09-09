@@ -25,6 +25,8 @@ overwrite_output_dir: false
 # resume_from_checkpoint: "./outputs/medreason/checkpoint-200"  # Specify exact checkpoint
 seed: 42
 bf16: true
+use_vllm: true
+vllm_mode: colocate
 learning_rate: 1.0e-06
 num_train_epochs: 1
 gradient_checkpointing: true
@@ -69,15 +71,15 @@ reward_funcs:
   - "format_partial_credit"
   - "reasoning_steps"
 
-reward_weights:
-  - 0.5
-  - 1.0
-  - 1.0 
-
 # reward_weights:
-#   - 1.5
+#   - 0.5
 #   - 1.0
-#   - 0.5 
+#   - 1.0 
+
+reward_weights:
+  - 1.5
+  - 1.0
+  - 0.5 
 
 # Full reward set (comment out for faster experimentation):
 # reward_funcs:

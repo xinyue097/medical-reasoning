@@ -53,3 +53,23 @@ pip install "liger-kernel>=0.5.10"
 pip install "math-verify==0.5.2"
 pip install "ruff>=0.9.0"
 pip install "git+https://github.com/huggingface/lighteval.git@d3da6b9bbf38104c8b5e1acc86f83541f9a502d1"
+
+
+
+
+
+# If installing using uv
+##request a compute node or use OOD remote desktop
+salloc --cpus-per-task=4 --mem=10G --time=2:00:00 --partition=devel
+
+###load miniconda
+module load miniconda
+
+###create initial environment with cuda, uv. and installed
+conda create --name NAME python=3.11 gxx=12.2 cuda-nvcc=12.4 cuda-version=12.4
+
+###activate environment and install uv packages
+conda activate NAME
+uv pip install vllm==0.8.5.post1
+uv pip install setuptools && uv pip install flash-attn --no-build-isolation
+GIT_LFS_SKIP_SMUDGE=1 uv pip install -e ".[dev]"

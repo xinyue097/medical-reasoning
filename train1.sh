@@ -3,10 +3,10 @@
 #SBATCH -p gpu
 #SBATCH --output=logs/train_%j.out
 #SBATCH --error=logs/train_%j.err
-#SBATCH --time=12:00:00
+#SBATCH --time=2:00:00
 #SBATCH --mem=128G
 #SBATCH --nodes=1 
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:h100:4
 #SBATCH --mail-type=ALL
 
