@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=medreason
 #SBATCH -p gpu
-#SBATCH --output=logs/train_%j.out
-#SBATCH --error=logs/train_%j.err
+#SBATCH --output=../../logs/train_%j.out
+#SBATCH --error=../../logs/train_%j.err
 #SBATCH --time=12:00:00
 #SBATCH --mem=128G
 #SBATCH --nodes=1 
@@ -34,8 +34,8 @@ export HF_DATASETS_CACHE="/tmp/hf_datasets_cache_$$"
 export HF_HOME="/tmp/hf_home_$$"
 export TRANSFORMERS_CACHE="/tmp/transformers_cache_$$"
 export WANDB_API_KEY="dcb0e216ebbdf52149865275d6cff550b91f3ca1"
-export WANDB_PROJECT="medreason"
-export WANDB_RUN_NAME="medreason-$(date +%Y%m%d)"
+export WANDB_PROJECT="med_qwen2.5_7B"
+export WANDB_RUN_NAME="med_qwen2.5_7B-$(date +%Y%m%d)"
 export MASTER_ADDR=localhost
 export MASTER_PORT=12355
 
@@ -46,9 +46,9 @@ echo "=================================================================="
 
 # Launch training
 accelerate launch \
-    --config_file accelerate_config.yaml \
+    --config_file ../accelerate_configs/zero2.yaml \
     --main_process_port 12355 \
-    src/medreason/grpo1.py config1.yaml
+    ../../src/medreason/grpo.py configs.yaml
 
 exit_code=$?
 

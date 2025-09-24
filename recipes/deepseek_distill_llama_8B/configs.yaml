@@ -20,7 +20,7 @@ dataset_test_split: "validation"
 max_steps: -1
 
 # Training Configuration
-output_dir: "./outputs/deepseek_distill_llama_8B"
+output_dir: "../../outputs/deepseek_distill_llama_8B"
 overwrite_output_dir: false
 # resume_from_checkpoint: "./outputs/medreason/checkpoint-200"  # Specify exact checkpoint
 seed: 42
